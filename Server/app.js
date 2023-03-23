@@ -7,11 +7,20 @@ const PORT = process.env.PORT || 4000 ;
 const connect = require('./db/connect');
 // env config
 require('dotenv').config()
+// cors
+const cors = require('cors');
+app.use(cors({credentials: true , origin: 'http://localhost:3000'}));
+// cookie parser
+const cookieParser = require('cookie-parser')
+app.use(cookieParser());
+
 
 
 // Builtin middleware setup
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
+
+
 
 
 

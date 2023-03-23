@@ -2,10 +2,9 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-
-
-const User = require('../models/user');
 const router = express.Router();
+const {isLoggedIn} = require('../middlewares/authMiddleware')
+const User = require('../models/user');
 
 
 router.post('/register' , async (req,res) => {
@@ -53,6 +52,82 @@ router.post('/register' , async (req,res) => {
     }
 })
 
+router.post('/login' ,async (req,res) => {
+    const {email , password} = req.body ;
+    if(!(email && password)) {
+        return res.status(400).json({
+            message: 'Please provide all required fields'
+        })
+    }
+    try {
+      const user = await User.find({email: email});
+      if(user.length > 0) {
+        const hashedPassword = user[0].password ;
+        const isCorrectPassword = await bcrypt.compare(password , hashedPassword);
+        if(isCorrectPassword) {
+
+            const token = await jwt.sign(
+                {user_id : user[0]._id , email: email} ,
+                process.env.SECRET_KEY ,
+                {
+                    expiresIn: "2h"
+                }
+            );
+
+            user[0].token = token ;
+            user[0].password = undefined;
+            
+            // return res.status(201).json({
+            //    message: 'Login Success' ,
+            //    user: user[0]
+            // })
+
+            // working with cookies
+            const options = {
+                expires: new Date(
+                    Date.now() + 3*24*60*60*1000
+                ) ,
+                httpOnly: true
+            }
+
+            return res.status(200).cookie('token' , token , options).json({
+                success: true ,
+                user: user[0]
+            });
+
+
+        } else {
+            return res.status(400).json({
+                message: 'Incorrect password'
+            })
+        }
+
+      } else {
+        return res.status(404).json({
+            message: 'user not found'
+        })
+      }
+    } catch(e) {
+        console.log(e);
+    }
+})
+
+router.get('/logout' , (req,res) => {
+    res.cookie('token' , null , {
+        expires: new Date(Date.now()) ,
+        httpOnly: true
+    })
+    res.status(200).json({
+        success: true ,
+        message : 'Logout Success'
+    })
+})
+router.get('/dashboard' , isLoggedIn , (req,res) => {
+   console.log(req.userId);
+   res.status(200).json({
+      message: 'Welcome to dashboard'
+   })
+})
 
 
 module.exports = router ;
