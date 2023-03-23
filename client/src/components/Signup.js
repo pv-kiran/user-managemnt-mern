@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Avatar from '@mui/material/Avatar';
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -8,14 +8,16 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+
+import { useDispatch, useSelector } from 'react-redux';
+import { registerUser, registerUserReset } from './../app/features/User/registerSlice';
+
 
 
 function Signup() {
 
-  const [user, setUser] = useState({name: '' , email: '' , password: ''});
-  const navigate = useNavigate();
+  const [user, setUser] = useState({fullName: '' , email: '' , password: ''});
 
   const handleChange = (e) => {
      const {name , value} = e.target ;
@@ -26,27 +28,46 @@ function Signup() {
      })
   }
 
-  const sendUserRegisterRequest = async () => {
-    try {
-      const responseData = await axios.post('http://localhost:4000/auth/register' , {
-          fullName: user.name ,
-          email: user.email ,
-          password: user.password
-      });
-      const newUser = await responseData.data;
-      console.log(newUser);
-      return newUser;
-    } catch(err) {
-        console.log(err);
+  const registerState = useSelector((state) => {
+    return state.register;
+  })
+  const dispatch = useDispatch();
+
+
+  const navigate = useNavigate();
+
+  
+
+  useEffect(() => {
+    if(registerState.success) {
+      dispatch(registerUserReset());
+      navigate('/signin')
     }
-  } 
+
+  } , [registerState.success])
+
+  // const sendUserRegisterRequest = async () => {
+  //   try {
+  //     const responseData = await axios.post('http://localhost:4000/auth/register' , {
+  //         fullName: user.name ,
+  //         email: user.email ,
+  //         password: user.password
+  //     });
+  //     const newUser = await responseData.data;
+  //     console.log(newUser);
+  //     return newUser;
+  //   } catch(err) {
+  //       console.log(err);
+  //   }
+  // } 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if(!(user.name && user.email && user.password)) {
+    console.log(user);
+    if(!(user.fullName && user.email && user.password)) {
         console.log('Please provide all required fields');
     } else {
-        sendUserRegisterRequest().then(() => navigate('/signin'));
+        dispatch(registerUser(user));
     }
   }
 
@@ -70,7 +91,7 @@ function Signup() {
                 fullWidth
                 id="name"
                 label="Name"
-                name="name"
+                name="fullName"
                 autoComplete="name"
                 onChange={(e) => {
                     handleChange(e)
@@ -111,8 +132,11 @@ function Signup() {
             variant="contained"
             color="primary"
             sx={{marginTop: '1rem'}}
+            disabled = {registerState.loading}
           >
-            Sign Up
+            {
+              !registerState.loading ? 'SIGN UP' : 'LOADING'
+            }
           </Button>
         </form>
       </div>

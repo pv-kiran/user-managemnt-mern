@@ -9,6 +9,7 @@ const User = require('../models/user');
 
 router.post('/register' , async (req,res) => {
     const {fullName , email , password} = req.body;
+    console.log(fullName , email ,password);
     if(!(fullName && email && password)) {
         return res.status(400).json({
             message: 'Please provide required fields'
