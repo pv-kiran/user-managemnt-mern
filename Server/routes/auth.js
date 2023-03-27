@@ -9,7 +9,7 @@ const User = require('../models/user');
 
 router.post('/register' , async (req,res) => {
     const {fullName , email , password} = req.body;
-    console.log(fullName , email ,password);
+    // console.log(fullName , email ,password);
     if(!(fullName && email && password)) {
         return res.status(400).json({
             message: 'Please provide required fields'
@@ -29,13 +29,13 @@ router.post('/register' , async (req,res) => {
                 email ,
                 password: hashedPassword 
             })
-            const token = await jwt.sign(
-                {user_id : user._id , email: email} ,
-                process.env.SECRET_KEY ,
-                {
-                    expiresIn: "2h"
-                }
-            );
+            // const token = await jwt.sign(
+            //     {user_id : user._id , email: email} ,
+            //     process.env.SECRET_KEY ,
+            //     {
+            //         expiresIn: "2h"
+            //     }
+            // );
             // console.log(token);
             // user.token = token;
             // console.log(user);
@@ -123,9 +123,14 @@ router.get('/logout' , (req,res) => {
         message : 'Logout Success'
     })
 })
-router.get('/dashboard' , isLoggedIn , (req,res) => {
+
+router.get('/user' , isLoggedIn , async (req,res) => {
    console.log(req.userId);
+   const user = await User.findOne({_id: req.userId});
+   user.password = undefined ;
+   console.log(user);
    res.status(200).json({
+      user: user,
       message: 'Welcome to dashboard'
    })
 })

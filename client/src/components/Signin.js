@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Avatar from '@mui/material/Avatar';
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -8,11 +8,22 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+
+import { useDispatch, useSelector } from 'react-redux';
+import { logginUser, logginUserReset, registerUserReset } from '../app/features/User/userSlice';
+import { setAuth } from '../app/features/Auth/authSlice';
+import Alert from './Alert';
+
+
 function Signin() {
 
   const [user, setUser] = useState({email: '' , password: ''});
   const navigate = useNavigate();
+
+  const logginState = useSelector((state) => {
+    return state.user;
+  })
+  const dispatch = useDispatch();
 
   const handleChange = (e) => {
      const {name , value} = e.target ;
@@ -22,29 +33,39 @@ function Signin() {
         }
      })
   }
-  const sendUserLoginRequest = async () => {
-    try {
-      const responseData = await axios.post('http://localhost:4000/auth/login' , {
-          email: user.email ,
-          password: user.password
-      });
-      const newUser = await responseData.data;
-      console.log(newUser);
-      return newUser;
-    } catch(err) {
-        console.log(err);
-    }
-  } 
+
+  useEffect(() => {
+     dispatch(registerUserReset());
+  } , [])
+  // Alert / Error
+  // For setting the alerts / Errors
+  const [alert, setAlert] = useState({show: false , msg: '' , type: ''});
+
+  const showAlert = (show = false , msg = '' , type = '') => {
+      setAlert({show , msg , type})
+  }
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log(user);
     if(!(user.email && user.password)) {
+        showAlert(true , 'Fill all the required fields' , 'danger')
         console.log('Please provide all required fields');
     } else {
-        sendUserLoginRequest().then(() => navigate('/user'));
+       dispatch(logginUser(user));
     }
   }
+
+  useEffect(() => {
+    if(logginState.success) {
+      console.log(logginState.user.user)
+      localStorage.setItem('user' , JSON.stringify(logginState.user.user))
+      dispatch(setAuth());
+      dispatch(logginUserReset());
+      navigate('/user')
+    }
+  } , [logginState.success])
 
   return (
     <Container component="main" maxWidth="xs">
@@ -63,7 +84,6 @@ function Signin() {
             <Grid item xs={12}>
               <TextField
                 variant="outlined"
-                required
                 fullWidth
                 id="email"
                 label="Email Address"
@@ -77,7 +97,6 @@ function Signin() {
             <Grid item xs={12}>
               <TextField
                 variant="outlined"
-                required
                 fullWidth
                 name="password"
                 label="Password"
@@ -99,6 +118,13 @@ function Signin() {
           >
             Sign IN
           </Button>
+          {
+            alert.show && <Alert {...alert} removeAlert = {showAlert}></Alert>
+          }
+          {
+            logginState?.error && <p className='alert danger'> Check username and password
+            </p>
+          }
         </form>
       </div>
     </Container>
@@ -106,3 +132,5 @@ function Signin() {
 }
 
 export default Signin
+
+

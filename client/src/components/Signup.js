@@ -11,7 +11,9 @@ import Container from "@mui/material/Container";
 import { useNavigate } from 'react-router-dom';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { registerUser, registerUserReset } from './../app/features/User/registerSlice';
+import { registerUser, registerUserReset } from '../app/features/User/userSlice';
+import Alert from './Alert';
+
 
 
 
@@ -29,11 +31,9 @@ function Signup() {
   }
 
   const registerState = useSelector((state) => {
-    return state.register;
+    return state.user;
   })
   const dispatch = useDispatch();
-
-
   const navigate = useNavigate();
 
   
@@ -46,25 +46,31 @@ function Signup() {
 
   } , [registerState.success])
 
-  // const sendUserRegisterRequest = async () => {
-  //   try {
-  //     const responseData = await axios.post('http://localhost:4000/auth/register' , {
-  //         fullName: user.name ,
-  //         email: user.email ,
-  //         password: user.password
-  //     });
-  //     const newUser = await responseData.data;
-  //     console.log(newUser);
-  //     return newUser;
-  //   } catch(err) {
-  //       console.log(err);
-  //   }
-  // } 
+  
+
+  // For setting the alerts / Errors
+  const [alert, setAlert] = useState({show: false , msg: '' , type: ''});
+
+  const showAlert = (show = false , msg = '' , type = '') => {
+      console.log('HEloo');
+      setAlert({show , msg , type})
+  }
+
+  // if(registerState.error) {
+  //   // console.log(registerState.error)
+  //   showAlert(true , 'Please try with another email' , 'danger')
+  //   console.log('Hello');
+  //   dispatch(registerUserReset());
+  // }
+
+  console.log(alert.show)
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log(user);
     if(!(user.fullName && user.email && user.password)) {
+        showAlert(true , 'Fill all the required fields' , 'danger')
         console.log('Please provide all required fields');
     } else {
         dispatch(registerUser(user));
@@ -78,6 +84,7 @@ function Signup() {
         <Avatar className='avatar'>
           <LockOutlinedIcon />
         </Avatar>
+        
         <Typography component="h1" variant="h5">
           Sign up
         </Typography>
@@ -138,6 +145,13 @@ function Signup() {
               !registerState.loading ? 'SIGN UP' : 'LOADING'
             }
           </Button>
+          {
+            alert.show && <Alert {...alert} removeAlert = {showAlert}></Alert>
+          }
+          {
+            registerState?.error && <p className='alert danger'> Email alredy exists </p>
+          }
+          
         </form>
       </div>
     </Container>
@@ -145,3 +159,20 @@ function Signup() {
 }
 
 export default Signup
+
+
+
+// const sendUserRegisterRequest = async () => {
+  //   try {
+  //     const responseData = await axios.post('http://localhost:4000/auth/register' , {
+  //         fullName: user.name ,
+  //         email: user.email ,
+  //         password: user.password
+  //     });
+  //     const newUser = await responseData.data;
+  //     console.log(newUser);
+  //     return newUser;
+  //   } catch(err) {
+  //       console.log(err);
+  //   }
+  // } 

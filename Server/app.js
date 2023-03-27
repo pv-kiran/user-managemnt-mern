@@ -28,9 +28,11 @@ app.use(express.json());
 
 // router configuration
 const authRouter = require('./routes/auth');
+const adminRouter = require('./routes/admin');
 
 
 app.use('/auth' , authRouter);
+app.use('/admin' , adminRouter);
 
 
 

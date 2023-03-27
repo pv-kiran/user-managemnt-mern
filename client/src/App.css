@@ -7,6 +7,13 @@
   text-decoration: none;
 }
 
+.home {
+  display: flex;
+  height: 90vh;
+  justify-content: center;
+  align-items: center;
+}
+
 .paper {
   margin-top: 3rem;
   display: flex;
@@ -24,4 +31,58 @@
   margin-top: 1rem;
 }
 
+.card_container {
+  width: 100%;
+  height: 85vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
+.upload_Img {
+  height: 10rem;
+  width: 10rem;
+  border-radius: 25%;
+}
+
+.modal_div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-conatainer {
+  width: 45rem;
+  margin: auto;
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+
+/* Styling the Alert */
+
+.alert {
+  /* width: 15rem; */
+  padding: .1rem;
+  margin-top: .3rem;
+  border-radius: .3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 1.3rem;
+  /* position: absolute;
+  top: 1rem; */
+}
+
+.success {
+  background-color: rgb(88, 146, 88);
+}
+
+.danger {
+  background-color: rgb(180, 96, 96);
+  
+}
