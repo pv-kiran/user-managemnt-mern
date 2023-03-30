@@ -6,9 +6,18 @@ const router = express.Router();
 const {isLoggedIn} = require('../middlewares/authMiddleware')
 const User = require('../models/user');
 
+const cloudinary = require('cloudinary').v2;
+cloudinary.config({
+    cloud_name: 'dk81bsiz2',
+    api_key:"334739518657796",
+    api_secret:"9OxvjE_0mewIx-NNfeLVKd8U_C0"
+})
+
+
 
 router.post('/register' , async (req,res) => {
     const {fullName , email , password} = req.body;
+    console.log(req.files);
     // console.log(fullName , email ,password);
     if(!(fullName && email && password)) {
         return res.status(400).json({
@@ -23,12 +32,23 @@ router.post('/register' , async (req,res) => {
             })
         } else {
 
-            const hashedPassword = await bcrypt.hash(password , 10);1
+            const hashedPassword = await bcrypt.hash(password , 10);
+
+            let result ;
+            if(req.files) {
+    
+                 result = await cloudinary.uploader.upload(req.files.profilePic.tempFilePath , {folder: 'Users'});
+                 console.log(result.secure_url);
+
+            }
+
             const user = await User.create({
                 fullName ,
                 email ,
-                password: hashedPassword 
+                password: hashedPassword ,
+                profileImage: result?.secure_url
             })
+            console.log(user);
             // const token = await jwt.sign(
             //     {user_id : user._id , email: email} ,
             //     process.env.SECRET_KEY ,
@@ -113,6 +133,65 @@ router.post('/login' ,async (req,res) => {
     }
 })
 
+router.get('/user' , isLoggedIn , async (req,res) => {
+   console.log(req.userId);
+   const user = await User.findOne({_id: req.userId});
+   user.password = undefined ;
+   console.log(user);
+   res.status(200).json({
+      user: user,
+      message: 'Welcome to dashboard'
+   })
+})
+
+router.patch('/user/:id' , async (req,res) => {
+       const {id} = req.params ;
+       console.log(id);
+       console.log(req.files);
+       try {
+            const user = await User.find({_id: id});
+            console.log(user);
+
+            if(req.files) {
+    
+                 result = await cloudinary.uploader.upload(req.files.profilePic.tempFilePath , {folder: 'Users'});
+                 console.log(result.secure_url);
+
+            }
+
+            user[0].profileImage = result.secure_url;
+            await user[0].save()
+
+            console.log(user[0]);
+
+            res.status(200).json({
+               message: 'Update success' ,
+               user
+            }) 
+
+
+       } catch(err) {
+          console.log(err);
+       }       
+
+    //    const {user} = req.body
+    //    console.log(user);
+    //    try {
+    //       const updatedUser = await User.findByIdAndUpdate(id , user , {
+    //         new: true
+    //       });
+    //       res.status(200).json({
+    //          user: updatedUser ,
+    //          message: 'Update success'
+    //       })
+    //    } catch(err) {
+    //       res.status(400).json({
+    //         message: 'Bad Request'
+    //       })
+    //    }
+})
+
+
 router.get('/logout' , (req,res) => {
     res.cookie('token' , null , {
         expires: new Date(Date.now()) ,
@@ -124,16 +203,7 @@ router.get('/logout' , (req,res) => {
     })
 })
 
-router.get('/user' , isLoggedIn , async (req,res) => {
-   console.log(req.userId);
-   const user = await User.findOne({_id: req.userId});
-   user.password = undefined ;
-   console.log(user);
-   res.status(200).json({
-      user: user,
-      message: 'Welcome to dashboard'
-   })
-})
+
 
 
 module.exports = router ;

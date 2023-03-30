@@ -9,9 +9,12 @@ import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 
+import Skeleton from '@mui/material/Skeleton';
+
 
 import { useDispatch, useSelector } from 'react-redux';
 import { getUser } from '../app/features/User/userSlice';
+import { uploadProfile } from './../app/features/User/userSlice';
 
 
 // Modal styling
@@ -30,53 +33,107 @@ const style = {
 function User() {
 
   const userState = useSelector((state) => {
-    return state.user?.user;
+    return state.user;
   })
 
   // for setting up ( opening and closing ) the modal
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  
 
   // for hadling image uplaod
   const [file, setFile] = useState('');
+  const [profilePic, setProfilePic] = useState('');
 
   const handleChange = (e) => {
-        console.log(e.target.files);
+        console.log(e.target.files[0]);
+        setProfilePic(e.target.files[0]);
         setFile(URL.createObjectURL(e.target.files[0]));
   }
 
+  const handleClose = () => {
+    if(file) {
+      setFile('');
+    }
+    setOpen(false)
+  };
+
+  const handleSubmit = (id) => {
+    const formData = new FormData();
+    formData.append('profilePic' , profilePic);
+    const details = {
+      formData , id
+    }
+    dispatch(uploadProfile(details));
+    handleClose();
+  }
+
+  
 
   // fetching the user details
   const dispatch = useDispatch();
+
   useEffect(() => {
-    console.log('Hello');
-    dispatch(getUser());
-  },[]);
+      console.log('Hello');
+      console.log(userState.success)
+      dispatch(getUser());
+  } , [userState.success]);
+
+  useEffect(() => {
+    if(userState.editSuccess) {
+      console.log('Hello');
+      console.log(userState.editSuccess)
+      dispatch(getUser());
+    }
+  } , [userState.editSuccess]);
 
 
   return (
     <section className="card_container">
-      <Card sx={{ width: '300px'  }}>
-          <CardMedia
-            sx={{ height: '250px' , padding: '10px' }}
-            image="https://img.freepik.com/free-icon/avatar_318-158392.jpg"
-            title="green iguana"
-          />
-          <CardContent>
-            <Typography gutterBottom variant="h5" component="div">
-              {userState.user?.fullName}
-              {/* HI */}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {userState.user?.email}
-              {/* Email */}
-            </Typography>
-          </CardContent>
-          <CardActions>
-            <Button size="small" onClick={handleOpen}>Profile Picture</Button>
-          </CardActions>
-      </Card>
+      {
+          userState.loading ? 
+          <Box
+            sx={{
+              bgcolor: 'white',
+              p: 8,
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+              <Skeleton
+                sx={{ bgcolor: 'grey' }}
+                variant="rectangular"
+                width={210}
+                height={300}
+            />
+          </Box>  : 
+          <Card sx={{ width: '300px'  }}>
+              <CardMedia
+                sx={{ height: '250px' , padding: '10px' }}
+                image= {userState.user?.user?.profileImage  ?  
+                          userState.user?.user?.profileImage : 
+                          "https://img.freepik.com/free-icon/avatar_318-158392.jpg" }
+                title="green iguana"
+              />
+              {/* "https://img.freepik.com/free-icon/avatar_318-158392.jpg" */}
+              <CardContent>
+                <Typography gutterBottom variant="h5" component="div">
+                  {userState.user?.user?.fullName}
+                  {/* HI */}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {userState.user?.user?.email}
+                  {/* Email */}
+                </Typography>
+              </CardContent>
+              <CardActions>
+                <Button size="small" onClick={handleOpen}>Profile Picture</Button>
+              </CardActions>
+          </Card>
+      }
+
+      
       <Modal
         open={open}
         onClose={handleClose}
@@ -87,9 +144,19 @@ function User() {
 
            <div className='modal_div'>
               <h2>Add Image:</h2>
-              <input style={{margin: '3rem 0'}} type="file" onChange={handleChange} />
+              <form>
+                <input style={{margin: '3rem 0'}} type="file" onChange={handleChange} />
+              </form>
               <img src={file ? file : 'https://img.freepik.com/free-icon/avatar_318-158392.jpg' } alt="imges" className='upload_Img'/>
            </div>
+           <Button 
+            onClick={() => {
+              handleSubmit(userState.user?.user?._id)
+            }}
+            variant="contained" 
+            sx={{marginLeft: '7.5rem' , height:'2rem' , marginTop: '1rem'}}>
+             Upload
+           </Button>
             
         </Box>
       </Modal>

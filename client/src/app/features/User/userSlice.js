@@ -9,6 +9,7 @@ const initialState = {
   loading: false,
   success: false ,
   user: {} ,
+  editSuccess: false ,
   error: ''
 }
 
@@ -42,6 +43,18 @@ export const getUser = createAsyncThunk('user/getUser', async () => {
     })
     .then(response => response.data)
 })
+
+export const uploadProfile = createAsyncThunk('user/postProfile', async ({formData , id}) => {
+  // console.log(formData);
+  // console.log(id);
+  return await axios
+    .patch(`http://localhost:4000/auth/user/${id}` , formData , {
+      withCredentials: true
+    })
+    .then(response => response.data)
+})
+
+
 
 
 const userSlice = createSlice({
@@ -111,7 +124,20 @@ const userSlice = createSlice({
       state.loading = false
       state.error = action.error.message
     })
-    
+    builder.addCase(uploadProfile.pending, state => {
+      state.loading = true;
+      state.editSuccess = false ;
+    })
+    builder.addCase(uploadProfile.fulfilled, (state, action) => {
+      state.loading = false;
+      state.editSuccess = true ;
+      state.user = action.payload;
+      console.log(state.user);
+    })
+    builder.addCase(uploadProfile.rejected, (state, action) => {
+      state.loading = false
+      state.error = action.error.message
+    })
   }
 })
 

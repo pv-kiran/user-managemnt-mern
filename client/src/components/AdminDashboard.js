@@ -26,6 +26,7 @@ import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 
+import Skeleton from '@mui/material/Skeleton';
 
 
 
@@ -74,18 +75,20 @@ function AdminDashboard() {
     if(isEdit) {
       setIsEdit(false);
     }
+    setProfileImg('');
     setOpen(false)
   };
 
 
 
   // ADDING A USER
-  const [user, setUser] = useState({fullName: '' , email: '' , password: ''});
+  const [user, setUser] = useState({fullName: '' , email: '' , password: '' , profilePic: ''});
+  const [profileImg , setProfileImg] = useState('');
 
 
   const handleAdduser = () => {
     if(editId) {
-      setUser({fullName: '' , email: '' , password: ''});
+      setUser({fullName: '' , email: '' , password: '' , profilePic: ''});
     }
     handleOpen();
   }
@@ -99,6 +102,19 @@ function AdminDashboard() {
      })
   }
 
+  const handleFileChange = (e) => {
+     console.log(e.target.files[0]);
+     setUser((prevUser) => {
+      return {
+         ...prevUser ,
+         profilePic: e.target.files[0]
+      }
+     })
+     setProfileImg(URL.createObjectURL(e.target.files[0]));
+     console.log(user);
+  }
+
+
 
   // Alert or error message
   const [alert, setAlert] = useState({show: false , msg: '' , type: ''});
@@ -109,7 +125,7 @@ function AdminDashboard() {
 
 
 
-  // handler for ADD AND EDIT user
+  // handler for ADD , EDIT and Search user
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -126,11 +142,21 @@ function AdminDashboard() {
        handleClose();
     }
     else {
-        dispatch(registerUser(user));
-        handleClose();
+        const newUser = new FormData();
+        
+        newUser.append('fullName' , user.fullName)
+        newUser.append('email' , user.email)
+        newUser.append('password' , user.password)
+        newUser.append('profilePic' , user.profilePic)
+
+        dispatch(registerUser(newUser));
+        handleClose(); 
+        setUser({fullName: '' , email: '' , password: '' , profilePic: ''});
+        console.log(user);
     }
   }
 
+  // {fullName: '' , email: '' , password: '' , profilePic: ''}
 
 
    useEffect(() => {
@@ -190,7 +216,16 @@ function AdminDashboard() {
          }}>ADD USER</Button> 
           
       </div>
-      <TableContainer sx={{width: 700 , margin: 'auto' , marginTop: 5}} component={Paper}>
+      {
+        ( registerState.loading || adminState.loading  ) ? 
+        <Box sx={{ width: 500 , margin: 'auto' , marginTop: '7rem' }}>
+          <Skeleton />
+          <Skeleton />
+          <Skeleton />
+          <Skeleton animation="wave" />
+          <Skeleton animation={false} />
+        </Box> : 
+        <TableContainer sx={{width: 700 , margin: 'auto' , marginTop: 5}} component={Paper}>
         <Table sx={{ width: 700 }} aria-label="simple table">
           <TableHead>
             <TableRow>
@@ -224,6 +259,8 @@ function AdminDashboard() {
           </TableBody>
         </Table>
       </TableContainer>
+      }
+      
       <Modal
         open={open}
         onClose={handleClose}
@@ -236,9 +273,12 @@ function AdminDashboard() {
               <Container component="main" maxWidth="xs">
                   <CssBaseline />
                   <div className='paper'>
-                      <Avatar className='avatar'>
+                  {
+                    profileImg ? <img className='profileImg' src = {profileImg} alt='profile'></img> : <Avatar className='avatar'>
                         <PersonAddAltIcon />
                       </Avatar>
+                  }
+                      
                       <Typography component="h1" variant="h5">
                         {
                           isEdit ? 'EDIT USER' : 'ADD USER'
@@ -294,6 +334,13 @@ function AdminDashboard() {
                             </Grid>
                           }
                         </Grid>
+                        {
+                           !isEdit && <Grid sx={{marginTop: '.8rem'}}>
+                          <input type='file' onChange={(e) => {
+                            handleFileChange(e)
+                          }}></input>
+                        </Grid>
+                        }
                         <Button
                           type="submit"
                           fullWidth

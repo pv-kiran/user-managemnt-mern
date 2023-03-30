@@ -55,8 +55,6 @@ router.post('/user/search' , isLoggedIn , isAdmin , async (req,res) => {
 })
 
 
-
-
 router.delete('/user/:id' , isLoggedIn , isAdmin , async (req,res) => {
     const {id} = req.params;
       try {
